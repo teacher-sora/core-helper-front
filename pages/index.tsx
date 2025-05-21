@@ -5,7 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import { jobs } from "@/data/jobs";
 import { jobClasses } from "@/data/job-classes";
 import jobClassSkills from "@/data/skills";
-import { ResultData } from "@/types/global.types";
+import { ImageData, ResultData } from "@/types/global.types";
+
+const backgroundImage: ImageData = {
+  src: require("@/public/images/treetops.png"),
+  alt: "background"
+}
 
 const Index = () => {
   const [selectedJob, setSelectedJob] = useState<JobCategory>("warrior");
@@ -136,12 +141,15 @@ const Index = () => {
   }, [skillCombinations]);
 
   return (
-    <div className="flex flex-column justify-center align-center">
+    <div className="relative flex flex-column justify-center align-center flex-1">
+      <div className={`flex ${styles.background}`}>
+        <Image src={backgroundImage.src} alt={backgroundImage.alt} />
+      </div>
       <div className="mt-80 flex flex-column align-center">
-        <h1 className="font-normal">메이플 코어 강화 도우미</h1>
+        <h1 className="font-normal white">메이플 코어 강화 도우미</h1>
         <hr className={`${styles.bannerLine}`} />
       </div>
-      <div className={`mt-40 mb-80 max-width flex ${styles.table}`}>
+      <div className={`mt-40 mb-150 max-width flex ${styles.table}`}>
         <div className="flex max-width gap-20">
           <div className={`flex flex-column gap-15 ${styles.left}`}>
             <div className={`flex flex-column background-white pd-10 gap-15 br-5 ${styles.jobs}`}>

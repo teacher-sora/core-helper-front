@@ -4,6 +4,9 @@
 }
 
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background-color: rgb(245, 245, 245);
 }
 
@@ -22,6 +25,13 @@ button {
   display: flex;
   align-items: center;
   font-size: 14px;
+}
+
+.min-100vh {
+  min-height: 100vh;
+}
+.flex-1 {
+  flex: 1;
 }
 
 .overflow-hidden {
@@ -87,8 +97,8 @@ button {
 .mt-80 {
   margin-top: 80px;
 }
-.mb-80 {
-  margin-bottom: 80px;
+.mb-150 {
+  margin-bottom: 150px;
 }
 
 .gap-5 {
