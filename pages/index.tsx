@@ -44,12 +44,28 @@ const Index = () => {
   const onSelectImages = useCallback((target: HTMLInputElement) => {
     const files = target.files || [];
     const filesArray = Array.from(files);
-    const urls = filesArray.map((file) => URL.createObjectURL(file));
 
-    setSelectedImages((prev) => [...files, ...prev]);
-    setImageUrls((prev) => [...urls, ...prev])
-    setTimeout(() => { target.value = ""; }, 0);
-  }, [setSelectedImages]);
+    let sizeOfImages = 0;
+    const limitOfImageSize = 20 * (1024 * 1024);
+    selectedImages.forEach((selectedImage) => {
+      sizeOfImages += selectedImage.size;
+    });
+    filesArray.forEach((file) => {
+      sizeOfImages += file.size;
+    });
+
+    try {
+      if (sizeOfImages > limitOfImageSize) return;
+
+      const urls = filesArray.map((file) => URL.createObjectURL(file));
+      setSelectedImages((prev) => [...filesArray, ...prev]);
+      setImageUrls((prev) => [...urls, ...prev]);
+    } catch (error) {
+      window.alert("에러 발생");
+    } finally {
+      setTimeout(() => { target.value = ""; }, 0);
+    }
+  }, [setSelectedImages, selectedImages]);
 
   const onRemoveImage = useCallback((index: number) => {
     setSelectedImages((prev) => prev.filter((_, idx) => idx !== index));
@@ -89,7 +105,7 @@ const Index = () => {
     }, 60000);
     
     try {
-      const res = await fetch("https://core-helper-back.onrender.com/core-helper/", {
+      const res = await fetch("https://core-helper-back.fly.dev/core-helper/", {
         method: "POST",
         body: formData,
       });
@@ -150,20 +166,7 @@ const Index = () => {
         setSkillCombinations((prev) => [...prev, skillCombo]);
       });
     }
-    else {
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: "smooth"
-      });
-    }
   }, [result]);
-  
-  useEffect(() => {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth"
-    });
-  }, [skillCombinations]);
 
   return (
     <div className="relative flex flex-column justify-center align-center flex-1">
@@ -199,7 +202,7 @@ const Index = () => {
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
                 <input type="file" className="none" id="screenshot-upload" accept=".jpg,.jpeg,.png" onChange={(event) => onSelectImages(event.target)} multiple />
-                <p>이미지 선택</p>
+                <p>이미지 선택 (최대 20MB)</p>
               </label>
               {
                 imageUrls.length > 0 && (
