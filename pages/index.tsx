@@ -224,7 +224,7 @@ const Index = () => {
             {
               (!isLoading && result["message"]) ? (
                 <div className="flex justify-center">
-                  <p className="text-center space-pre font-14 red">{ result["message"] }</p>
+                  <p className="text-center space-pre font-14 white">{ result["message"] }</p>
                 </div>
               ) : (!isLoading && result["combinations"]) ? (
                 <div className={`grid gap-15 ${styles.result}`}>
