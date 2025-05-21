@@ -93,7 +93,7 @@ const Index = () => {
 
     const timer1 = setTimeout(() => {
       setLoadingMessage("요청에 따라 오래 걸릴 수도 있어요");
-    }, 5000);
+    }, 3000);
     const timer2 = setTimeout(() => {
       setLoadingMessage("최대한 빨리 분석해 볼게요");
     }, 15000);
