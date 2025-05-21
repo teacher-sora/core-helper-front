@@ -1,0 +1,10 @@
+.modal {
+  z-index: 1;
+  bottom: 100px;
+  padding: 10px 25px;
+  background-color: rgb(220, 240, 200);
+  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.5);
+}
+.modal p {
+  color: rgb(90, 110, 70);
+}

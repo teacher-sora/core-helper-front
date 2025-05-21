@@ -6,6 +6,7 @@ import { jobs } from "@/data/jobs";
 import { jobClasses } from "@/data/job-classes";
 import jobClassSkills from "@/data/skills";
 import { ImageData, ResultData } from "@/types/global.types";
+import LoadingModal from "@/components/loading-modal";
 
 const backgroundImage: ImageData = {
   src: require("@/public/images/treetops.png"),
@@ -19,6 +20,8 @@ const Index = () => {
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<ResultData>({});
@@ -72,28 +75,50 @@ const Index = () => {
       formData.append("images", image);
     });
 
+    const timer1 = setTimeout(() => {
+      setLoadingMessage("요청에 따라 오래 걸릴 수도 있어요");
+    }, 5000);
+    const timer2 = setTimeout(() => {
+      setLoadingMessage("최대한 빨리 분석해 볼게요");
+    }, 15000);
+    const timer3 = setTimeout(() => {
+      setLoadingMessage("잠시 다른 일을 하고 오셔도 될 것 같아요");
+    }, 30000);
+    const timer4 = setTimeout(() => {
+      setLoadingMessage("아직 분석 중이니까 나가지 말아 주세요");
+    }, 60000);
+    
     try {
-      await fetch("https://core-helper-back.onrender.com/core-helper/", {
+      const res = await fetch("https://core-helper-back.onrender.com/core-helper/", {
         method: "POST",
         body: formData,
-      }).then(async (res) => {
-        const data = await res.json();
-  
-        if (data["success"]) {
-          setResult({ combinations: data["combinations"] });
-          setSkillCombinations([]);
-        }
-        else {
-          setResult({ message: data["message"] });
-        }
-  
-        setIsLoading(false);
       });
-    } catch (Exception) {
-      console.log('error')
+
+      const data = await res.json();
+
+      if (data["success"]) {
+        setResult({ combinations: data["combinations"] });
+        setSkillCombinations([]);
+      }
+      else {
+        setResult({ message: data["message"] });
+      }
+    } catch (error) {
       setResult({ message: "오류가 발생했어요.\n잠시 후 다시 시도해주세요." });
+    } finally {
+      setIsLoading(false);
+      clearAllTimeout([timer1, timer2, timer3, timer4]);
+      setTimeout(() => {
+        setLoadingMessage("");
+      }, 250);
     }
   }, [selectedJobClass, selectedSkills, selectedImages]);
+
+  const clearAllTimeout = (timers: NodeJS.Timeout[]) => {
+    timers.forEach((timer) => {
+      clearTimeout(timer);
+    });
+  }
 
   useEffect(() => {
     setResult((prev) => {
@@ -142,6 +167,7 @@ const Index = () => {
 
   return (
     <div className="relative flex flex-column justify-center align-center flex-1">
+      <LoadingModal isVisible={isLoading && loadingMessage !== ""} message={loadingMessage} />
       <div className={`flex ${styles.background}`}>
         <Image src={backgroundImage.src} alt={backgroundImage.alt} />
       </div>
@@ -229,8 +255,8 @@ const Index = () => {
               ) : (!isLoading && result["combinations"]) ? (
                 <div className={`grid gap-15 ${styles.result}`}>
                   {
-                    skillCombinations.map((skillCombination) => (
-                      <div className="flex flex-column background-white pd-10 br-5 gap-10">
+                    skillCombinations.map((skillCombination, idx) => (
+                      <div className="flex flex-column background-white pd-10 br-5 gap-10" key={idx}>
                         {
                           skillCombination.map((skill, idx) => (
                             <div className={`flex pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`} key={skill.skill}>

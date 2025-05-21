@@ -44,6 +44,9 @@ button {
 .absolute {
   position: absolute;
 }
+.fixed {
+  position: fixed;
+}
 
 .flex {
   display: flex;
@@ -116,6 +119,13 @@ button {
 
 .pointer {
   cursor: pointer;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-1 {
+  opacity: 1;
 }
 
 .transition-150 {
