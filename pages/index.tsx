@@ -67,22 +67,27 @@ const Index = () => {
       formData.append("images", image);
     });
 
-    await fetch("http://127.0.0.1:8000/core-helper/", {
-      method: "POST",
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-
-      if (data["success"]) {
-        setResult({ combinations: data["combinations"] });
-        setSkillCombinations([]);
-      }
-      else {
-        setResult({ message: data["message"] });
-      }
-
-      setIsLoading(false);
-    });
+    try {
+      await fetch("https://core-helper-back.onrender.com/core-helper/", {
+        method: "POST",
+        body: formData,
+      }).then(async (res) => {
+        const data = await res.json();
+  
+        if (data["success"]) {
+          setResult({ combinations: data["combinations"] });
+          setSkillCombinations([]);
+        }
+        else {
+          setResult({ message: data["message"] });
+        }
+  
+        setIsLoading(false);
+      });
+    } catch (Exception) {
+      console.log('error')
+      setResult({ message: "오류가 발생했어요.\n잠시 후 다시 시도해주세요." });
+    }
   }, [selectedJobClass, selectedSkills, selectedImages]);
 
   useEffect(() => {
@@ -128,7 +133,7 @@ const Index = () => {
       top: document.body.scrollHeight,
       behavior: "smooth"
     });
-  }, [skillCombinations])
+  }, [skillCombinations]);
 
   return (
     <div className="flex flex-column justify-center align-center">
@@ -220,7 +225,7 @@ const Index = () => {
                       <div className="flex flex-column background-white pd-10 br-5 gap-10">
                         {
                           skillCombination.map((skill, idx) => (
-                            <div className={`flex pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`}>
+                            <div className={`flex pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`} key={skill.skill}>
                               <Image src={skill.image.src} alt={skill.image.alt} />
                               <div className="flex max-width space-between">
                                 <p>{ skill["name"] }</p>
