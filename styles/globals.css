@@ -1,0 +1,158 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: rgb(245, 245, 245);
+}
+
+h1 {
+  font-family: 'Font-Family';
+  display: flex;
+  align-items: center;
+}
+p {
+  font-family: 'Font-Family';
+  display: flex;
+  align-items: center;
+}
+button {
+  font-family: Font-Family;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+
+.flex {
+  display: flex;
+}
+.flex-column {
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+}
+
+.none {
+  display: none;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+.justify-center {
+  justify-content: center;
+}
+.space-between {
+  justify-content: space-between;
+}
+.align-start {
+  align-items: flex-start;
+}
+.align-center {
+  align-items: center;
+}
+
+.max-width {
+  width: 100%;
+}
+
+.pd-5 {
+  padding: 5px;
+}
+.pd-10 {
+  padding: 10px;
+}
+
+.br-5 {
+  border-radius: 5px;
+}
+
+.mt-40 {
+  margin-top: 40px;
+}
+.mt-80 {
+  margin-top: 80px;
+}
+.mb-80 {
+  margin-bottom: 80px;
+}
+
+.gap-5 {
+  gap: 5px;
+}
+.gap-10 {
+  gap: 10px;
+}
+.gap-15 {
+  gap: 15px;
+}
+.gap-20 {
+  gap: 20px;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.transition-150 {
+  transition: all 150ms;
+}
+.transition-250 {
+  transition: all 250ms;
+}
+
+.font-normal {
+  font-weight: 300;
+}
+
+.font-14 {
+  font-size: 14px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.space-pre {
+  white-space: pre;
+}
+
+.green {
+  color: green !important;
+}
+.red {
+  color: #e5534b !important;
+}
+.coral {
+  color: coral !important;
+}
+.white {
+  color: white !important;
+}
+
+.background-white {
+  background-color: white;
+}
+.background-aliceblue {
+  background-color: aliceblue;
+}
+
+@font-face {
+  font-family: 'Font-Family';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Light.woff2') format('woff2');
+  font-weight: 300;
+}
