@@ -46,7 +46,7 @@ const Index = () => {
     const filesArray = Array.from(files);
 
     let sizeOfImages = 0;
-    const limitOfImageSize = 20 * (1024 * 1024);
+    const limitOfImageSize = 100 * (1024 * 1024);
     selectedImages.forEach((selectedImage) => {
       sizeOfImages += selectedImage.size;
     });
@@ -202,7 +202,7 @@ const Index = () => {
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
                 <input type="file" className="none" id="screenshot-upload" accept=".jpg,.jpeg,.png" onChange={(event) => onSelectImages(event.target)} multiple />
-                <p>이미지 선택 (최대 20MB)</p>
+                <p>이미지 선택 (최대 100MB)</p>
               </label>
               {
                 imageUrls.length > 0 && (
