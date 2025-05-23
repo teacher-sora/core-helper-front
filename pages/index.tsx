@@ -105,10 +105,18 @@ const Index = () => {
     }, 60000);
     
     try {
-      const res = await fetch("https://core-helper-back.fly.dev/core-helper/", {
+      const devServer = "http://127.0.0.1:8000/core-helper/";
+      const liveServer = "https://core-helper-back.fly.dev/core-helper/";
+
+      const res = await fetch(liveServer, {
         method: "POST",
         body: formData,
       });
+
+      if (!res.ok) {
+        setResult({ message: "분석 중 오류가 발생했어요.\n잠시 후 다시 시도해 주세요." })
+        return;
+      }
 
       const data = await res.json();
 
@@ -120,7 +128,7 @@ const Index = () => {
         setResult({ message: data["message"] });
       }
     } catch (error) {
-      setResult({ message: "오류가 발생했어요.\n잠시 후 다시 시도해주세요." });
+      setResult({ message: "서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요." });
     } finally {
       setIsLoading(false);
       clearAllTimeout([timer1, timer2, timer3, timer4]);
