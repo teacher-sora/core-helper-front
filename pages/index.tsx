@@ -109,7 +109,7 @@ const Index = () => {
       const devServer = "http://127.0.0.1:8000/core-helper/";
       const liveServer = "https://core-helper-back.fly.dev/core-helper/";
 
-      const res = await fetch(devServer, {
+      const res = await fetch(liveServer, {
         method: "POST",
         body: formData,
       });
