@@ -263,6 +263,8 @@ const Index = () => {
       }
     }
 
+    if (validCoreCombinations.length === 0) return [];
+
     const highestLevelCombination = findHighestLevelCombination(coreSkills, validCoreCombinations, mainSkillIndices);
     const translatedCombination = translateToKorean(highestLevelCombination);
 
