@@ -7,6 +7,7 @@ import { jobClasses } from "@/data/job-classes";
 import jobClassSkills from "@/data/skills";
 import { ImageData } from "@/types/global.types";
 import LoadingModal from "@/components/loading-modal";
+import { runFindValidCoreCombinationWorker } from "@/utils/useFindValidCoreCombinationWorker";
 
 const backgroundImage: ImageData = {
   src: require("@/public/images/treetops.png"),
@@ -90,7 +91,7 @@ const Index = () => {
   const onToggleRecordScreen = () => {
     if (mediaStream) stopRecordScreen();
     else startRecordScreen();
-  }
+  };
 
   const onCaptureRecordingScreen = async () => {
     if (!mediaStream || !videoElement) return;
@@ -110,7 +111,7 @@ const Index = () => {
     });
 
     addImages([file]);
-  }
+  };
 
   const startRecordScreen = async () => {
     if (mediaStream) return;
@@ -133,7 +134,7 @@ const Index = () => {
 
       window.alert("에러 발생");
     }
-  }
+  };
 
   const stopRecordScreen = () => {
     try {
@@ -147,7 +148,7 @@ const Index = () => {
       setMediaStream(null);
       setVideoElement(null);
     }
-  }
+  };
 
   const onSubmit = useCallback(async () => {
     setIsLoading(true);
@@ -196,7 +197,7 @@ const Index = () => {
       const data = await res.json();
 
       if (data["success"]) {
-        const combinations = findCoreCombinations(data["core_skill_names"]);
+        const combinations = await findCoreCombinations(data["core_skill_names"]);
 
         if (combinations.length > 0) {
           setSkillCombinations(combinations);
@@ -223,77 +224,59 @@ const Index = () => {
     timers.forEach((timer) => {
       clearTimeout(timer);
     });
-  }
+  };
 
-  const findCoreCombinations = (array: string[][]) => {
-    const mainSkillIndices = getMainSkillIndices(array);
+  const findCoreCombinations = async (coreSkills: string[][]) => {
+    const mainSkillIndices = getMainSkillIndices(coreSkills);
     const allMainSkills = Object.keys(mainSkillIndices);
 
-    const minCaseCount = Math.ceil(2 * selectedSkills.length / 3);
-    const maxCaseCount = Math.min(2 * selectedSkills.length, allMainSkills.length) + 1;
+    const minCaseCount = Math.ceil(selectedSkills.length / 3) * 2;
+    const maxCaseCount = Math.min(selectedSkills.length * 2, allMainSkills.length) + 1;
 
     let validCoreCombinations: number[][] = [];
-    let minLength = maxCaseCount;
+    let minLength = Infinity;
 
     for (let count = minCaseCount; count < maxCaseCount; count++) {
+      if (count > minLength) break;
       const mainSkillCombinations = generateCombinations(allMainSkills, count);
-      if (count >= minLength) break;
 
-      mainSkillCombinations.some((mainSkillcombination) => {
-        if (count >= minLength) return true;
+      for (const mainSkillCombo of mainSkillCombinations) {
+        let indexedSkills: number[][] = [];
 
-        let uniqueCoreCombinations: number[][] = [[]];
-        mainSkillcombination.forEach((mainSkill) => {
-          let newCoreCombination: number[][] = [];
+        for (const mainSkill of mainSkillCombo) {
+          let validCoreIndex: number[] = [];
 
-          uniqueCoreCombinations.forEach((uniqueCoreCombination) => {
-            mainSkillIndices[mainSkill].forEach((skillIndex) => {
-              newCoreCombination.push([...uniqueCoreCombination, skillIndex]);
-            });
-          });
-
-          uniqueCoreCombinations = newCoreCombination;
-        });
-
-        uniqueCoreCombinations.some((uniqueCoreCombination) => {
-          if (uniqueCoreCombination.length > minLength) return true;
-
-          let skillCounter: { [key: string]: number } = {};
-          uniqueCoreCombination.some((skillIndex) => {
-            array[skillIndex].forEach((skillCombination) => {
-              skillCounter[skillCombination] = (skillCounter[skillCombination] ?? 0) + 1;
-            });
-
-            if (selectedSkills.every((skill) => skill in skillCounter && skillCounter[skill] >= 2)) {
-              if (uniqueCoreCombination.length < minLength) {
-                minLength = uniqueCoreCombination.length;
-                validCoreCombinations = [uniqueCoreCombination];
-              }
-              else if (uniqueCoreCombination.length === minLength) {
-                validCoreCombinations.push(uniqueCoreCombination);
-              }
+          for (const coreIdx of mainSkillIndices[mainSkill]) {
+            if (coreSkills[coreIdx].some((skill) => selectedSkills.includes(skill))) {
+              validCoreIndex.push(coreIdx);
             }
-          })
-        });
-      });
+          }
+
+          indexedSkills.push(validCoreIndex);
+        }
+
+        const validCoreCombo: number[] = await runFindValidCoreCombinationWorker(coreSkills, selectedSkills, indexedSkills);
+        if (validCoreCombo) {
+          minLength = validCoreCombo.length;
+          validCoreCombinations.push(validCoreCombo);
+        }
+      }
     }
 
-    if (validCoreCombinations.length === 0) return[];
-
-    const highestLevelCombination = findHighestLevelCombination(array, validCoreCombinations, mainSkillIndices);
+    const highestLevelCombination = findHighestLevelCombination(coreSkills, validCoreCombinations, mainSkillIndices);
     const translatedCombination = translateToKorean(highestLevelCombination);
 
     return translatedCombination;
   }
   
-  const getMainSkillIndices = (array: string[][]) => {
+  const getMainSkillIndices = (coreSkills: string[][]) => {
     let indices: { [key: string]: number[] } = {};
-    array.forEach((coreSkill, index) => {
+    coreSkills.forEach((coreSkill, index) => {
       indices[coreSkill[0]] = indices[coreSkill[0]] ? [...indices[coreSkill[0]], index] : [index];
     });
 
     return indices;
-  }
+  };
 
   const generateCombinations = (array: string[], r: number) => {
     const results: string[][] = [];
@@ -308,9 +291,9 @@ const Index = () => {
     });
 
     return results;
-  }
+  };
 
-  const findHighestLevelCombination = (array: string[][], validCoreCombinations: number[][], mainSkillIndices: { [key: string]: number[] }) => {
+  const findHighestLevelCombination = (coreSkills: string[][], validCoreCombinations: number[][], mainSkillIndices: { [key: string]: number[] }) => {
     const expPerCore = 50;
     const levelExpRequirements = [0, 55, 125, 210, 310, 425, 555, 700, 860, 1035, 1225, 1430, 1650, 1885, 2135, 2400, 2680, 2975, 3285, 3610, 3950, 4305, 4675, 5060, 5460];
 
@@ -320,7 +303,7 @@ const Index = () => {
     validCoreCombinations.forEach((validCoreCombination) => {
       let totalCoreLevel = 0;
 
-      const validCoreNameCombination = validCoreCombination.map(coreSkillIndex => array[coreSkillIndex]);
+      const validCoreNameCombination = validCoreCombination.map(coreSkillIndex => coreSkills[coreSkillIndex]);
       const mainSkillNames = validCoreNameCombination.map((skillName) => skillName[0]);
 
       mainSkillNames.forEach((skillName) => {
@@ -343,12 +326,12 @@ const Index = () => {
     const maxLevelIndex = totalCoreLevels.indexOf(maxLevel);
 
     return validCoreNameCombinations[maxLevelIndex];
-  }
+  };
 
-  const translateToKorean = (array: string[][]) => {
+  const translateToKorean = (coreSkills: string[][]) => {
     let translatedArray: SkillData[][] = [];
 
-    array.forEach((coreSkill) => {
+    coreSkills.forEach((coreSkill) => {
       let skillCombination: SkillData[] = [];
 
       coreSkill.forEach((skill) => {
@@ -363,7 +346,7 @@ const Index = () => {
     });
 
     return translatedArray;
-  }
+  };
 
   useEffect(() => {
     setResultMessage("");
