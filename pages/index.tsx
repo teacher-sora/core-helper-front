@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { jobs } from "@/data/jobs";
 import { jobClasses } from "@/data/job-classes";
 import jobClassSkills from "@/data/skills";
-import { ImageData, ResultData } from "@/types/global.types";
+import { ImageData } from "@/types/global.types";
 import LoadingModal from "@/components/loading-modal";
 
 const backgroundImage: ImageData = {
@@ -21,9 +21,11 @@ const Index = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
-  const [loadingMessage, setLoadingMessage] = useState<string>("");
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
   const [resultMessage, setResultMessage] = useState<string>("");
 
   const [skillCombinations, setSkillCombinations] = useState<SkillData[][]>([]);
@@ -35,6 +37,7 @@ const Index = () => {
   const onSelectJobClass = (jobClass: JobClassCategory) => {
     setSelectedJobClass(jobClass);
     setSelectedSkills([]);
+    setSkillCombinations([]);
   };
 
   const onSelectSkill = (skill: string) => {
@@ -79,9 +82,77 @@ const Index = () => {
     });
   }, []);
 
+  const onToggleRecordScreen = () => {
+    if (mediaStream) stopRecordScreen();
+    else startRecordScreen();
+  }
+
+  const onCaptureRecordingScreen = async () => {
+    if (!mediaStream || !videoElement) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    const context = canvas.getContext("2d");
+    context?.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    const blob: Blob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b!), "image/png");
+    });
+    const file: File = new File([blob], `display-media${Date.now()}.png`, {
+      type: "image/png"
+    });
+    const url = URL.createObjectURL(file);
+
+    setSelectedImages((prev) => [file, ...prev]);
+    setImageUrls((prev) => [url, ...prev]);
+  }
+
+  const startRecordScreen = async () => {
+    if (mediaStream) return;
+
+    try {
+      const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      mediaStream.getVideoTracks().forEach((track) => { track.onended = () => {
+        stopRecordScreen();
+      }});
+
+      const videoElement = document.createElement("video");
+      videoElement.srcObject = mediaStream;
+
+      await videoElement.play();
+
+      setMediaStream(mediaStream);
+      setVideoElement(videoElement);
+    } catch (error: any) {
+      if (error.name === "NotAllowedError") return;
+
+      window.alert("에러 발생");
+    }
+  }
+
+  const stopRecordScreen = () => {
+    try {
+      if (!mediaStream || !videoElement) return;
+
+      mediaStream.getTracks().forEach((track) => track.stop());
+  
+      videoElement.pause();
+      videoElement.srcObject = null;
+    } finally {
+      setMediaStream(null);
+      setVideoElement(null);
+    }
+  }
+
   const onSubmit = useCallback(async () => {
     setIsLoading(true);
+    setResultMessage("");
     setSkillCombinations([]);
+
+    if (mediaStream) stopRecordScreen();
+
     const formData = new FormData();
 
     formData.append("selected_job_class", selectedJobClass);
@@ -143,7 +214,7 @@ const Index = () => {
         setLoadingMessage("");
       }, 250);
     }
-  }, [selectedJobClass, selectedSkills, selectedImages]);
+  }, [selectedJobClass, selectedSkills, selectedImages, mediaStream]);
 
   const clearAllTimeout = (timers: NodeJS.Timeout[]) => {
     timers.forEach((timer) => {
@@ -326,6 +397,10 @@ const Index = () => {
               <div className="flex flex-column">
                 <p className="font-14">코어 분해 탭 화면을 1장 이상 선택해 주세요.</p>
                 <p className="font-14 red">잠금된 코어는 분석되지 않습니다.</p>
+              </div>
+              <div className={`flex gap-10 ${styles.captureControls}`}>
+                <button className="flex justify-center pointer max-width pd-5 br-5 transition-150" onClick={() => onToggleRecordScreen()} data-status={mediaStream ? "recording" : "idle"}>{ mediaStream ? "중지" : "녹화" }</button>
+                <button className="flex justify-center pointer max-width background-white pd-5 br-5 transition-150" onClick={() => onCaptureRecordingScreen()} disabled={mediaStream === null}>캡처</button>
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
                 <input type="file" className="none" id="screenshot-upload" accept=".jpg,.jpeg,.png" onChange={(event) => onSelectImages(event.target)} multiple />
