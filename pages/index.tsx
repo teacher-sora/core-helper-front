@@ -48,8 +48,19 @@ const Index = () => {
     const files = target.files || [];
     const filesArray = Array.from(files);
 
+    try {
+      addImages(filesArray);
+    } catch (error) {
+      window.alert("에러 발생");
+    } finally {
+      setTimeout(() => { target.value = ""; }, 0);
+    }
+  }, [setSelectedImages, selectedImages]);
+
+  const addImages = (filesArray: File[]) => {
     let sizeOfImages = 0;
     const limitOfImageSize = 100 * (1024 * 1024);
+
     selectedImages.forEach((selectedImage) => {
       sizeOfImages += selectedImage.size;
     });
@@ -57,18 +68,12 @@ const Index = () => {
       sizeOfImages += file.size;
     });
 
-    try {
-      if (sizeOfImages > limitOfImageSize) return;
+    if (sizeOfImages > limitOfImageSize) return;
 
-      const urls = filesArray.map((file) => URL.createObjectURL(file));
-      setSelectedImages((prev) => [...filesArray, ...prev]);
-      setImageUrls((prev) => [...urls, ...prev]);
-    } catch (error) {
-      window.alert("에러 발생");
-    } finally {
-      setTimeout(() => { target.value = ""; }, 0);
-    }
-  }, [setSelectedImages, selectedImages]);
+    const urls = filesArray.map((file) => URL.createObjectURL(file));
+    setSelectedImages((prev) => [...filesArray, ...prev]);
+    setImageUrls((prev) => [...urls, ...prev]);
+  }
 
   const onRemoveImage = useCallback((index: number) => {
     setSelectedImages((prev) => prev.filter((_, idx) => idx !== index));
@@ -100,13 +105,11 @@ const Index = () => {
     const blob: Blob = await new Promise((resolve) => {
       canvas.toBlob((b) => resolve(b!), "image/png");
     });
-    const file: File = new File([blob], `display-media${Date.now()}.png`, {
+    const file: File = new File([blob], `${Date.now()}.png`, {
       type: "image/png"
     });
-    const url = URL.createObjectURL(file);
 
-    setSelectedImages((prev) => [file, ...prev]);
-    setImageUrls((prev) => [url, ...prev]);
+    addImages([file]);
   }
 
   const startRecordScreen = async () => {
