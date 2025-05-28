@@ -151,6 +151,8 @@ const Index = () => {
   };
 
   const onSubmit = useCallback(async () => {
+    if (isLoading) return;
+
     setIsLoading(true);
     setResultMessage("");
     setSkillCombinations([]);
