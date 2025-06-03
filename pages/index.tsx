@@ -270,9 +270,9 @@ const Index = () => {
       }
 
       candidates.sort((a, b) => b.level - a.level);
-      const combinationCandidates = candidates.map((candidate) => candidate["combination"]);
+      const coreCandidates = candidates.map((candidate) => candidate["combination"]);
 
-      validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, combinationCandidates);
+      validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, coreCandidates);
       if (validCoreCombination) minLength = count;
     }
 
