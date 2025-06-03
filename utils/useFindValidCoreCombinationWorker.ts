@@ -1,4 +1,6 @@
-export const runFindValidCoreCombinationWorker = (coreSkills: string[][], selectedSkills: string[], arrays: number[][]): Promise<number[]> => {
+import { WorkerRequest, WorkerResponse } from "@/types/worker.types";
+
+export const runFindValidCoreCombinationWorker = (cores: WorkerRequest["cores"], selectedSkills: WorkerRequest["selectedSkills"], candidates: WorkerRequest["candidates"]): Promise<WorkerResponse["result"]> => {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("@/workers/findValidCoreCombination.ts", import.meta.url), { type: "module" });
 
@@ -12,6 +14,6 @@ export const runFindValidCoreCombinationWorker = (coreSkills: string[][], select
       worker.terminate();
     }
 
-    worker.postMessage({ coreSkills, selectedSkills, arrays });
+    worker.postMessage({ cores, selectedSkills, candidates });
   });
 };

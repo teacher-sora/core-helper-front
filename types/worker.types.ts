@@ -1,7 +1,7 @@
 export interface WorkerRequest {
-  coreSkills: string[][];
+  cores: string[][];
   selectedSkills: string[];
-  arrays: number[][];
+  candidates: number[][][];
 }
 
 export interface WorkerResponse {

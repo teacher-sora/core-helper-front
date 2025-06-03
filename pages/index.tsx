@@ -212,6 +212,7 @@ const Index = () => {
         setResultMessage(data["message"]);
       }
     } catch (error) {
+      console.log(error)
       setResultMessage("서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요.");
     } finally {
       setIsLoading(false);
@@ -228,59 +229,102 @@ const Index = () => {
     });
   };
 
-  const findCoreCombinations = async (coreSkills: string[][]) => {
-    const mainSkillIndices = getMainSkillIndices(coreSkills);
-    const allMainSkills = Object.keys(mainSkillIndices);
+  const findCoreCombinations = async (cores: string[][]) => {
+    let coreIndicesByMainSkill: { [key: string]: number[] } = {};
+    coreIndicesByMainSkill = groupCoresByMainSkill(cores);
+    const coreLevelsBySkill = calculateCoreLevelsBySkill(coreIndicesByMainSkill);
 
-    const minCaseCount = Math.ceil(selectedSkills.length / 3) * 2;
-    const maxCaseCount = Math.min(selectedSkills.length * 2, allMainSkills.length) + 1;
+    const filteredCores = filterCoresBySelectedSkills(cores, selectedSkills);
+    coreIndicesByMainSkill = groupCoresByMainSkill(filteredCores);
 
-    let validCoreCombinations: number[][] = [];
+    const allMainSkills = Object.keys(coreIndicesByMainSkill);
+
+    const minCount = Math.ceil(selectedSkills.length / 3) * 2;
+    const maxCount = Math.min(selectedSkills.length * 2, allMainSkills.length);
+    
+    let validCoreCombination: number[] = [];
     let minLength = Infinity;
 
-    for (let count = minCaseCount; count < maxCaseCount; count++) {
-      if (count > minLength) break;
-      const mainSkillCombinations = generateCombinations(allMainSkills, count);
+    for (let count = minCount; count <= maxCount; count++) {
+      if (count >= minLength) break;
 
+      const mainSkillCombinations = generateCombinations(allMainSkills, count);
+      const candidates: { combination: number[][], level: number }[] = [];
+      
       for (const mainSkillCombo of mainSkillCombinations) {
-        let indexedSkills: number[][] = [];
+        const coreIndicesCombo: number[][] = [];
+        let totalLevel: number = 0;
 
         for (const mainSkill of mainSkillCombo) {
-          let validCoreIndex: number[] = [];
+          let coreIndices: number[] = [];
 
-          for (const coreIdx of mainSkillIndices[mainSkill]) {
-            if (coreSkills[coreIdx].some((skill) => selectedSkills.includes(skill))) {
-              validCoreIndex.push(coreIdx);
-            }
+          for (const coreIdx of coreIndicesByMainSkill[mainSkill]) {
+            coreIndices.push(coreIdx);
           }
 
-          indexedSkills.push(validCoreIndex);
+          totalLevel += coreLevelsBySkill[mainSkill];
+          coreIndicesCombo.push(coreIndices);
         }
-
-        const validCoreCombo: number[] = await runFindValidCoreCombinationWorker(coreSkills, selectedSkills, indexedSkills);
-        if (validCoreCombo) {
-          minLength = validCoreCombo.length;
-          validCoreCombinations.push(validCoreCombo);
-        }
+        
+        candidates.push({ combination: coreIndicesCombo, level: totalLevel });
       }
+
+      candidates.sort((a, b) => b.level - a.level);
+      const combinationCandidates = candidates.map((candidate) => candidate["combination"]);
+
+      validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, combinationCandidates);
+      if (validCoreCombination) minLength = count;
     }
 
-    if (validCoreCombinations.length === 0) return [];
-
-    const highestLevelCombination = findHighestLevelCombination(coreSkills, validCoreCombinations, mainSkillIndices);
-    const translatedCombination = translateToKorean(highestLevelCombination);
+    const coreSkillCombination = resolveCoreSkills(filteredCores, validCoreCombination);
+    const translatedCombination = translateToKorean(coreSkillCombination);
 
     return translatedCombination;
   }
   
-  const getMainSkillIndices = (coreSkills: string[][]) => {
+  const groupCoresByMainSkill = (cores: string[][]) => {
     let indices: { [key: string]: number[] } = {};
-    coreSkills.forEach((coreSkill, index) => {
-      indices[coreSkill[0]] = indices[coreSkill[0]] ? [...indices[coreSkill[0]], index] : [index];
+    cores.forEach((core, index) => {
+      indices[core[0]] = indices[core[0]] ? [...indices[core[0]], index] : [index];
     });
 
     return indices;
   };
+
+  const calculateCoreLevelsBySkill = (indices: { [key: string]: number[] }) => {
+    const expPerCore = 50;
+    const levelExpRequirements = [0, 55, 125, 210, 310, 425, 555, 700, 860, 1035, 1225, 1430, 1650, 1885, 2135, 2400, 2680, 2975, 3285, 3610, 3950, 4305, 4675, 5060, 5460];
+    
+    const totalCoreLevels: { [key: string]: number } = {};
+
+    Object.keys(indices).map((mainSkill) => {
+      const length = indices[mainSkill].length;
+      const exp = expPerCore * length;
+
+      levelExpRequirements.some((expReq, i) => {
+        if (exp <= expReq) {
+          totalCoreLevels[mainSkill] = i;
+          return true;
+        }
+      });
+    });
+
+    return totalCoreLevels;
+  }
+
+  const filterCoresBySelectedSkills = (cores: string[][], selectedSkills: string[]) => {
+    const filteredCores: string[][] = [];
+    cores.forEach((core) => {
+      core.some((skill) => {
+        if (selectedSkills.includes(skill)) {
+          filteredCores.push(core);
+          return true;
+        }
+      });
+    });
+
+    return filteredCores;
+  }
 
   const generateCombinations = (array: string[], r: number) => {
     const results: string[][] = [];
@@ -297,45 +341,19 @@ const Index = () => {
     return results;
   };
 
-  const findHighestLevelCombination = (coreSkills: string[][], validCoreCombinations: number[][], mainSkillIndices: { [key: string]: number[] }) => {
-    const expPerCore = 50;
-    const levelExpRequirements = [0, 55, 125, 210, 310, 425, 555, 700, 860, 1035, 1225, 1430, 1650, 1885, 2135, 2400, 2680, 2975, 3285, 3610, 3950, 4305, 4675, 5060, 5460];
-
-    let totalCoreLevels: number[] = [];
-    let validCoreNameCombinations: string[][][] = [];
-
-    validCoreCombinations.forEach((validCoreCombination) => {
-      let totalCoreLevel = 0;
-
-      const validCoreNameCombination = validCoreCombination.map(coreSkillIndex => coreSkills[coreSkillIndex]);
-      const mainSkillNames = validCoreNameCombination.map((skillName) => skillName[0]);
-
-      mainSkillNames.forEach((skillName) => {
-        const count = mainSkillIndices[skillName].length;
-        const coreExp = count * expPerCore;
-
-        levelExpRequirements.some((expRequirement, index) => {
-          if (coreExp <= expRequirement) {
-            totalCoreLevel += index;
-            return true;
-          }
-        });
-      });
-
-      totalCoreLevels.push(totalCoreLevel);
-      validCoreNameCombinations.push(validCoreNameCombination);
+  const resolveCoreSkills = (cores: string[][], combination: number[]) => {
+    let coreSkillCombination: string[][] = [];
+    combination.forEach((coreIdx) => {
+      coreSkillCombination.push(cores[coreIdx]);
     });
 
-    const maxLevel = Math.max(...totalCoreLevels);
-    const maxLevelIndex = totalCoreLevels.indexOf(maxLevel);
+    return coreSkillCombination;
+  }
 
-    return validCoreNameCombinations[maxLevelIndex];
-  };
-
-  const translateToKorean = (coreSkills: string[][]) => {
+  const translateToKorean = (coreSkillCombination: string[][]) => {
     let translatedArray: SkillData[][] = [];
 
-    coreSkills.forEach((coreSkill) => {
+    coreSkillCombination.forEach((coreSkill) => {
       let skillCombination: SkillData[] = [];
 
       coreSkill.forEach((skill) => {
@@ -389,7 +407,7 @@ const Index = () => {
                 <p className="font-14 red">잠금된 코어는 분석되지 않습니다.</p>
               </div>
               <div className={`flex gap-10 ${styles.captureControls}`}>
-                <button className="flex justify-center pointer max-width pd-5 br-5 transition-150" onClick={() => onToggleRecordScreen()} data-status={mediaStream ? "recording" : "idle"}>{ mediaStream ? "중지" : "녹화" }</button>
+                <button className="flex justify-center pointer max-width pd-5 br-5 transition-150" onClick={() => onToggleRecordScreen()} data-status={mediaStream ? "recording" : "idle"}>{ mediaStream ? "중지" : "화면 공유" }</button>
                 <button className="flex justify-center pointer max-width background-white pd-5 br-5 transition-150" onClick={() => onCaptureRecordingScreen()} disabled={mediaStream === null}>캡처</button>
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>

@@ -1,43 +1,126 @@
 import { WorkerRequest, WorkerResponse } from "@/types/worker.types";
 
-self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { coreSkills, selectedSkills, arrays } = event.data;
+let wasmModule: any = null;
+let wasmMemory!: WebAssembly.Memory;
+let wasmLoadPromise: Promise<void> | null = null;
 
-  const generator = findValidCombination(coreSkills, selectedSkills, arrays);
-  const validCombination: number[] = generator.next().value;
+const skillToInt: Record<string, number> = {};
+let skillCounter = 1;
 
-  const response: WorkerResponse = { result: validCombination };
-  self.postMessage(response);
+const getSkillId = (skill: string) => {
+  if (!skillToInt[skill]) {
+    skillToInt[skill] = skillCounter++;
+  }
+
+  return skillToInt[skill];
+}
+
+self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
+  let response!: WorkerResponse;
+
+  try {
+    const { cores, selectedSkills, candidates } = event.data;
+  
+    await loadWasm();
+  
+    const intCores = cores.map((core) => core.map(getSkillId));
+    const intSelectedSkills = selectedSkills.map(getSkillId);
+  
+    let validCombination: number[] = [];
+  
+    for (const cand of candidates) {
+      const result = callWasmFindValidCombination(intCores, intSelectedSkills, cand);
+      if (result.length > 0) {
+        validCombination = result;
+        break;
+      }
+    }
+  
+    response = { result: validCombination };
+  } catch (error: any) {
+    console.error(error)
+    response = { result: [] }
+  } finally {
+    self.postMessage(response);
+  }
 };
 
-function* findValidCombination<T extends number>(coreSkills: string[][], selectedSkills: string[], arrays: T[][], index = 0, current: T[] = []): Generator<T[]> {
-  if (index === arrays.length) {
-    let skillCounter: { [key: string]: number } = {};
-    current.forEach((coreIndex) => {
-      coreSkills[coreIndex].forEach((skill) => {
-        skillCounter[skill] = (skillCounter[skill] ?? 0) + 1;
-      });
+const loadWasm = (): Promise<void> => {
+  if (wasmModule) return Promise.resolve();
+  if (wasmLoadPromise) return wasmLoadPromise;
+
+  const wasiImports = {
+    env: {
+      memory: new WebAssembly.Memory({ initial: 10 }), // 또는 export된 memory 사용
+      // malloc, free는 나중에 export에서 받아오므로 생략 가능
+    },
+    wasi_snapshot_preview1: {
+      fd_write: () => 0,
+      fd_read: () => 0,
+      fd_seek: () => 0,
+      fd_close: () => 0,
+      proc_exit: (code: number) => { throw new Error(`WASI exit with code ${code}`); },
+      clock_time_get: () => 0,
+      environ_sizes_get: () => 0,
+      environ_get: () => 0,
+      args_sizes_get: () => 0,
+      args_get: () => 0,
+    }
+  };
+
+  wasmLoadPromise = fetch("/wasms/find-valid-combination.wasm")
+    .then((res) => res.arrayBuffer())
+    .then((buffer) => WebAssembly.instantiate(buffer, wasiImports))
+    .then((instance) => {
+      wasmModule = instance.instance.exports;
+      wasmMemory = instance.instance.exports.memory as WebAssembly.Memory;
     });
 
-    const isSatisfied = selectedSkills.every((skill) => skillCounter[skill] >= 2);
-
-    if (isSatisfied) {
-      yield [...current];
-      return true;
-    }
-
-    return false;
-  }
-
-  for (const item of arrays[index]) {
-    current.push(item);
-    const done = yield* findValidCombination(coreSkills, selectedSkills, arrays, index + 1, current);
-    current.pop();
-
-    if (done) {
-      return true;
-    }
-  }
-
-  return false;
+  return wasmLoadPromise;
 }
+
+const allocAndWrite = (data: number[]): number => {
+  const ptr = wasmModule.malloc(data.length * 4);
+  const heap = new Int32Array(wasmMemory.buffer, ptr, data.length);
+  heap.set(data);
+
+  return ptr;
+}
+
+const callWasmFindValidCombination = (
+  cores: number[][],
+  selectedSkills: number[],
+  candidates: number[][]
+): number[] => {
+  const coresFlat = cores.flat();
+  const coreWidth = cores[0].length;
+  const coreCount = cores.length;
+
+  const candidateFlat = candidates.flat();
+  const candidateLengths = candidates.map(c => c.length);
+  const candidateCount = candidates.length;
+
+  const coresPtr = allocAndWrite(coresFlat);
+  const selectedPtr = allocAndWrite(selectedSkills);
+  const candidatePtr = allocAndWrite(candidateFlat);
+  const candidateLengthsPtr = allocAndWrite(candidateLengths);
+  const outputPtr = wasmModule.malloc(candidateCount * 4);
+
+  const resultLen = wasmModule.find_valid_combination(
+    coresPtr, coreCount, coreWidth,
+    selectedPtr, selectedSkills.length,
+    candidatePtr, candidateLengthsPtr, candidateCount,
+    outputPtr
+  );
+
+  const result = new Int32Array(wasmMemory.buffer, outputPtr, resultLen);
+  const combination = Array.from(result);
+
+  wasmModule.free(coresPtr);
+  wasmModule.free(selectedPtr);
+  wasmModule.free(candidatePtr);
+  wasmModule.free(candidateLengthsPtr);
+  wasmModule.free(outputPtr);
+
+  return combination;
+};
