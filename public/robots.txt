@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.core-helper.site
+
+# Sitemaps
+Sitemap: https://www.core-helper.site/sitemap.xml
