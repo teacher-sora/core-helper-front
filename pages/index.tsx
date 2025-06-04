@@ -239,7 +239,7 @@ const Index = () => {
 
     const allMainSkills = Object.keys(coreIndicesByMainSkill);
 
-    const minCount = Math.ceil(selectedSkills.length / 3) * 2;
+    const minCount = Math.ceil((selectedSkills.length * 2) / 3);
     const maxCount = Math.min(selectedSkills.length * 2, allMainSkills.length);
     
     let validCoreCombination: number[] = [];
