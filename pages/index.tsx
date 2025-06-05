@@ -41,6 +41,7 @@ const Index = () => {
   const onSelectJobClass = (jobClass: JobClassCategory) => {
     setSelectedJobClass(jobClass);
     setSelectedSkills([]);
+    setResultMessage("");
     setCoreCombination([]);
   };
 
@@ -177,12 +178,11 @@ const Index = () => {
     } = {};
 
     if (isCacheValid) {
-      setIsLoading(true);
-
       if (cachedCores.length > 0) {
         const combinations = await findBestCombination(cachedCores);
   
         if (combinations.length > 0) {
+          setResultMessage("");
           setCoreCombination(combinations);
         }
         else {
@@ -409,11 +409,6 @@ const Index = () => {
 
     return translatedArray;
   };
-
-  useEffect(() => {
-    setResultMessage("");
-    setCoreCombination([]);
-  }, [selectedJob, selectedJobClass, selectedSkills, selectedImages]);
   
   useEffect(() => {
     setCachedCores([]);
