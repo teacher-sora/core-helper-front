@@ -421,10 +421,13 @@ const Index = () => {
   }, [selectedJobClass, selectedImages]);
 
   return (
-    <div className="relative flex flex-column justify-center align-center flex-1">
+    <div className="relative flex flex-column justify-center align-center flex-1 overflow-hidden">
       <LoadingModal isVisible={isLoading && loadingMessage !== ""} message={loadingMessage} />
-      <div className={`flex ${styles.background}`}>
-        <Image src={backgroundImage.src} alt={backgroundImage.alt} />
+      <div className={`absolute max-width ${styles.background}`}>
+        <div className="relative max-width">
+          <Image className="absolute" src={backgroundImage.src} alt={backgroundImage.alt} />
+          <div className="absolute" />
+        </div>
       </div>
       <div className="mt-80 flex flex-column align-center">
         <h1 className="font-normal white">메이플 코어 강화 도우미</h1>

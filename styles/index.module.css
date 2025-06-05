@@ -1,15 +1,23 @@
 .background {
   z-index: -1;
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  height: 100%;
+  top: 0px;
+}
+.background > div {
+  height: 1250px;
 }
 .background img {
-  width: 100%;
+  transform: translateX(-50%);
+  top: 0px;
+  left: 50%;
+  width: 101%;
   height: 100%;
   object-fit: cover;
   filter: brightness(0.55);
+}
+.background > div > div {
+  bottom: 0px;
+  width: 100%;
+  box-shadow: 0px 0px 50px 100px rgb(235, 230, 220);
 }
 
 .bannerLine {
