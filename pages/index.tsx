@@ -29,7 +29,10 @@ const Index = () => {
   const [loadingMessage, setLoadingMessage] = useState<string>("");
   const [resultMessage, setResultMessage] = useState<string>("");
 
-  const [skillCombinations, setSkillCombinations] = useState<SkillData[][]>([]);
+  const [coreCombination, setCoreCombination] = useState<SkillData[][]>([]);
+  
+  const [cachedCores, setCachedCores] = useState<string[][]>([]);
+  const [isCacheValid, setIsCacheValid] = useState<boolean>(false);
 
   const onSelectJob = (job: JobCategory) => {
     setSelectedJob(job);
@@ -38,7 +41,7 @@ const Index = () => {
   const onSelectJobClass = (jobClass: JobClassCategory) => {
     setSelectedJobClass(jobClass);
     setSelectedSkills([]);
-    setSkillCombinations([]);
+    setCoreCombination([]);
   };
 
   const onSelectSkill = (skill: string) => {
@@ -152,22 +155,7 @@ const Index = () => {
 
   const onSubmit = useCallback(async () => {
     if (isLoading) return;
-
-    setIsLoading(true);
-    setResultMessage("");
-    setSkillCombinations([]);
-
     if (mediaStream) stopRecordScreen();
-
-    const formData = new FormData();
-
-    formData.append("selected_job_class", selectedJobClass);
-    selectedSkills.forEach((skill) => {
-      formData.append("selected_skills", skill);
-    })
-    selectedImages.forEach((image) => {
-      formData.append("images", image);
-    });
 
     const timer1 = setTimeout(() => {
       setLoadingMessage("요청에 따라 오래 걸릴 수도 있어요");
@@ -181,47 +169,99 @@ const Index = () => {
     const timer4 = setTimeout(() => {
       setLoadingMessage("아직 분석 중이니까 나가지 말아 주세요");
     }, 60000);
-    
-    try {
-      const devServer = "http://127.0.0.1:8000/core-helper/";
-      const liveServer = "https://core-helper-back.fly.dev/core-helper/";
 
-      const res = await fetch(liveServer, {
-        method: "POST",
-        body: formData,
-      });
+    let data: {
+      success?: boolean,
+      core_skill_names?: string[][],
+      message?: string
+    } = {};
 
-      if (!res.ok) {
-        setResultMessage("분석 중 오류가 발생했어요.\n잠시 후 다시 시도해 주세요.");
-        return;
-      }
+    if (isCacheValid) {
+      setIsLoading(true);
 
-      const data = await res.json();
-
-      if (data["success"]) {
-        const combinations = await findCoreCombinations(data["core_skill_names"]);
-
+      if (cachedCores.length > 0) {
+        const combinations = await findBestCombination(cachedCores);
+  
         if (combinations.length > 0) {
-          setSkillCombinations(combinations);
+          setCoreCombination(combinations);
         }
         else {
-          setResultMessage("현재 보유한 코어로는 조합이 어려워요.\n조금 더 코어를 모아주세요.");
+          data = { message: "현재 보유한 코어로는 조합이 어려워요.\n조금 더 코어를 모아주세요." };
         }
       }
       else {
-        setResultMessage(data["message"]);
+        data = { message: "이미지에서 쓸만한 코어가 발견되지 않았어요.\n다시 한번 확인해 주세요." };
       }
-    } catch (error) {
-      console.log(error)
-      setResultMessage("서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요.");
-    } finally {
-      setIsLoading(false);
-      clearAllTimeout([timer1, timer2, timer3, timer4]);
-      setTimeout(() => {
-        setLoadingMessage("");
-      }, 250);
     }
-  }, [selectedJobClass, selectedSkills, selectedImages, mediaStream]);
+    else {
+      setIsLoading(true);
+      setResultMessage("");
+      setCoreCombination([]);
+
+      const formData = new FormData();
+  
+      formData.append("selected_job_class", selectedJobClass);
+      selectedSkills.forEach((skill) => {
+        formData.append("selected_skills", skill);
+      })
+      selectedImages.forEach((image) => {
+        formData.append("images", image);
+      });
+
+      try {
+        const devServer = "http://127.0.0.1:8000/core-helper/";
+        const liveServer = "https://core-helper-back.fly.dev/core-helper/";
+  
+        const res = await fetch(liveServer, {
+          method: "POST",
+          body: formData,
+        });
+  
+        if (!res.ok) {
+          data = {
+            success: false,
+            message: "분석 중 오류가 발생했어요.\n잠시 후 다시 시도해 주세요."
+          };
+        }
+        else {
+          data = await res.json();
+          setIsCacheValid(true);
+        }
+      } catch (error) {
+        data = {
+          success: false,
+          message: "서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요."
+        };
+
+        console.error(error)
+      }
+
+      if (data["success"]) {
+        const cores = data["core_skill_names"]!;
+        const combinations = await findBestCombination(cores);
+
+        setCachedCores(cores);
+  
+        if (combinations.length > 0) {
+          setCoreCombination(combinations);
+        }
+        else {
+          data = { message: "현재 보유한 코어로는 조합이 어려워요.\n조금 더 코어를 모아주세요." };
+        }
+      }
+      else {
+        data = { message: data["message"] };
+      }
+    }
+    
+    setIsLoading(false);
+    clearAllTimeout([timer1, timer2, timer3, timer4]);
+
+    if (data["message"]) setResultMessage(data["message"]);
+    setTimeout(() => {
+      setLoadingMessage("");
+    }, 250);
+  }, [selectedJobClass, selectedSkills, selectedImages, mediaStream, isCacheValid]);
 
   const clearAllTimeout = (timers: NodeJS.Timeout[]) => {
     timers.forEach((timer) => {
@@ -229,7 +269,7 @@ const Index = () => {
     });
   };
 
-  const findCoreCombinations = async (cores: string[][]) => {
+  const findBestCombination = async (cores: string[][]) => {
     let coreIndicesByMainSkill: { [key: string]: number[] } = {};
     coreIndicesByMainSkill = groupCoresByMainSkill(cores);
     const coreLevelsBySkill = calculateCoreLevelsBySkill(coreIndicesByMainSkill);
@@ -273,7 +313,7 @@ const Index = () => {
       const coreCandidates = candidates.map((candidate) => candidate["combination"]);
 
       validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, coreCandidates);
-      if (validCoreCombination) minLength = count;
+      if (validCoreCombination.length > 0) minLength = count;
     }
 
     const coreSkillCombination = resolveCoreSkills(filteredCores, validCoreCombination);
@@ -372,7 +412,13 @@ const Index = () => {
 
   useEffect(() => {
     setResultMessage("");
+    setCoreCombination([]);
   }, [selectedJob, selectedJobClass, selectedSkills, selectedImages]);
+  
+  useEffect(() => {
+    setCachedCores([]);
+    setIsCacheValid(false);
+  }, [selectedJobClass, selectedImages]);
 
   return (
     <div className="relative flex flex-column justify-center align-center flex-1">
@@ -465,13 +511,13 @@ const Index = () => {
                 <div className="flex justify-center">
                   <p className="text-center space-pre font-14 white">{ resultMessage }</p>
                 </div>
-              ) : (!isLoading && skillCombinations.length > 0) ? (
+              ) : (!isLoading && coreCombination.length > 0) ? (
                 <div className={`grid gap-15 ${styles.result}`}>
                   {
-                    skillCombinations.map((skillCombination, idx) => (
+                    coreCombination.map((core, idx) => (
                       <div className="flex flex-column background-white pd-10 br-5 gap-10" key={idx}>
                         {
-                          skillCombination.map((skill, idx) => (
+                          core.map((skill, idx) => (
                             <div className={`flex pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`} key={skill.skill}>
                               <Image src={skill.image.src} alt={skill.image.alt} />
                               <div className="flex max-width space-between">
