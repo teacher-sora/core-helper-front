@@ -97,6 +97,14 @@ export const jobClasses: JobClassesDict = {
         src: require("@/public/job-classes/zero.png"),
         alt: "제로"
       }
+    },
+    {
+      name: "렌",
+      jobClass: "len",
+      image: {
+        src: require("@/public/job-classes/len.png"),
+        alt: "len"
+      }
     }
   ],
   magician: [
@@ -385,6 +393,6 @@ export const jobClasses: JobClassesDict = {
         src: require("@/public/job-classes/ark.png"),
         alt: "ark"
       }
-    },
+    }
   ]
 }

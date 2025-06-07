@@ -11,6 +11,7 @@ import { aran } from "./aran";
 import { kaiser } from "./kaiser";
 import { adele } from "./adele";
 import { zero } from "./zero";
+import { len } from "./len";
 import { firePoison } from "./fire-poison";
 import { iceLightning } from "./ice-lightning";
 import { bishop } from "./bishop";
@@ -59,6 +60,7 @@ const jobClassSkills: SkillDict = {
   kaiser: kaiser,
   adele: adele,
   zero: zero,
+  len: len,
   "fire-poison": firePoison,
   "ice-lightning": iceLightning,
   bishop: bishop,

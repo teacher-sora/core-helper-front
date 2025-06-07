@@ -9,7 +9,7 @@ export interface JobData {
 
 export type JobCategory = "warrior" | "magician" | "bowman" | "thief" | "pirate"
 
-export type Warriors = "hero" | "paladin" | "dark-knight" | "soul-master" | "mihile" | "blaster" | "demon-slayer" | "demon-avenger" | "aran" | "kaiser" | "adele" | "zero"
+export type Warriors = "hero" | "paladin" | "dark-knight" | "soul-master" | "mihile" | "blaster" | "demon-slayer" | "demon-avenger" | "aran" | "kaiser" | "adele" | "zero" | "len"
 export type Magicians = "fire-poison" | "ice-lightning" | "bishop" | "flame-wizard" | "battle-mage" | "evan" | "luminous" | "illium" | "lara" | "kinesis"
 export type Bowmans = "bowmaster" | "marksman" | "pathfinder" | "wind-breaker" | "wild-hunter" | "mercedes" | "kain"
 export type Thiefs = "night-lord" | "shadower" | "dual-blade" | "night-walker" | "xenon" | "phantom" | "cadena" | "khali" | "hoyoung"
