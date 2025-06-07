@@ -226,6 +226,7 @@ const Index = () => {
         else {
           data = await res.json();
           setIsCacheValid(true);
+          console.log(data["core_skill_names"])
         }
       } catch (error) {
         data = {

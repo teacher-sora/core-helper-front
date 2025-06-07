@@ -36,7 +36,7 @@ export const len: SkillData[] = [
     }
   },
   {
-    name: "매화검 본초: 쇄매",
+    name: "매화검 2초식: 쇄매",
     skill: "thoao",
     isEssential: true,
     image: {
@@ -63,12 +63,21 @@ export const len: SkillData[] = [
     }
   },
   {
-    name: "매화검 본초: 예인",
+    name: "매화검 3초식: 예인",
     skill: "dPdls",
     isEssential: true,
     image: {
       src: require("@/public/skills/len/dPdls.png"),
       alt: "dPdls",
+    }
+  },
+  {
+    name: "망혼검 2초식: 연참",
+    skill: "duscka",
+    isEssential: true,
+    image: {
+      src: require("@/public/skills/len/duscka.png"),
+      alt: "duscka",
     }
   }
 ];
