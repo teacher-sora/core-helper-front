@@ -43,15 +43,16 @@
 .captureControls button {
   border: 1px solid rgb(235, 235, 235);
 }
+.captureControls button img {
+  opacity: 0.75;
+  width: auto;
+  height: 18px;
+}
 .captureControls button:nth-child(1)[data-status="idle"] {
   background-color: rgb(240, 255, 240);
 }
 .captureControls button:nth-child(1)[data-status="recording"] {
   background-color: rgb(255, 225, 220);
-}
-.captureControls button:nth-child(2):disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
 }
 
 .upload {

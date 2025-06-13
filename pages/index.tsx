@@ -14,6 +14,15 @@ const backgroundImage: ImageData = {
   alt: "background"
 }
 
+const captureIcon: ImageData = {
+  src: require("@/public/icons/capture.svg"),
+  alt: "capture"
+}
+const recordIcon: ImageData = {
+  src: require("@/public/icons/record.svg"),
+  alt: "record"
+}
+
 const Index = () => {
   const [selectedJob, setSelectedJob] = useState<JobCategory>("warrior");
   const [selectedJobClass, setSelectedJobClass] = useState<JobClassCategory>("hero");
@@ -98,7 +107,12 @@ const Index = () => {
   };
 
   const onCaptureRecordingScreen = async () => {
-    if (!mediaStream || !videoElement) return;
+    if (!mediaStream) {
+      onToggleRecordScreen();
+      return;
+    }
+
+    if (!videoElement) return;
 
     const canvas = document.createElement("canvas");
     canvas.width = videoElement.videoWidth;
@@ -452,8 +466,14 @@ const Index = () => {
                 <p className="font-14 red">잠금된 코어는 분석되지 않습니다.</p>
               </div>
               <div className={`flex gap-10 ${styles.captureControls}`}>
-                <button className="flex justify-center pointer max-width pd-5 br-5 transition-150" onClick={() => onToggleRecordScreen()} data-status={mediaStream ? "recording" : "idle"}>{ mediaStream ? "중지" : "화면 공유" }</button>
-                <button className="flex justify-center pointer max-width background-white pd-5 br-5 transition-150" onClick={() => onCaptureRecordingScreen()} disabled={mediaStream === null}>캡처</button>
+                <button className="flex justify-center pointer max-width pd-5 br-5 gap-5 transition-150" onClick={() => onToggleRecordScreen()} data-status={mediaStream ? "recording" : "idle"}>
+                  <Image src={recordIcon.src} alt={recordIcon.alt} />
+                  { mediaStream ? "중지" : "화면 공유" }
+                </button>
+                <button className="flex justify-center pointer max-width background-white pd-5 br-5 gap-5 transition-150" onClick={() => onCaptureRecordingScreen()}>
+                  <Image src={captureIcon.src} alt={captureIcon.alt} />
+                  캡처
+                </button>
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
                 <input type="file" className="none" id="screenshot-upload" accept=".png" onChange={(event) => onSelectImages(event.target)} multiple />
