@@ -226,7 +226,7 @@ const Index = () => {
         else {
           data = await res.json();
           setIsCacheValid(true);
-          console.log(data["core_skill_names"])
+          // console.log(data["core_skill_names"])
         }
       } catch (error) {
         data = {
@@ -456,7 +456,7 @@ const Index = () => {
                 <button className="flex justify-center pointer max-width background-white pd-5 br-5 transition-150" onClick={() => onCaptureRecordingScreen()} disabled={mediaStream === null}>캡처</button>
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
-                <input type="file" className="none" id="screenshot-upload" accept=".jpg,.jpeg,.png" onChange={(event) => onSelectImages(event.target)} multiple />
+                <input type="file" className="none" id="screenshot-upload" accept=".png" onChange={(event) => onSelectImages(event.target)} multiple />
                 <p>이미지 선택 (최대 100MB)</p>
               </label>
               {
