@@ -204,7 +204,7 @@ const Index = () => {
         }
       }
       else {
-        data = { message: "이미지에서 쓸만한 코어가 발견되지 않았어요.\n다시 한번 확인해 주세요." };
+        data = { message: "화질이 낮으면 인식이 잘 안 돼요.\n조금 더 높은 화질의 사진을 이용해 주세요." };
       }
     }
     else {
@@ -256,7 +256,7 @@ const Index = () => {
         const combinations = await findBestCombination(cores);
 
         setCachedCores(cores);
-  
+
         if (combinations.length > 0) {
           setCoreCombination(combinations);
         }
@@ -441,11 +441,11 @@ const Index = () => {
       </div>
       <div className="mt-80 flex flex-column align-center">
         {/* 업데이트 이전까지 유지 */}
-        <p className="font-normal white">현재 유저가 너무 많아 요청이 느려지고 있습니다.</p>
+        {/* <p className="font-normal white">현재 유저가 너무 많아 요청이 느려지고 있습니다.</p>
         <p className="font-normal white">서버 오류가 계속될 경우</p>
         <p className="font-normal white">하단 카톡방에서 이미지를 올려주시면, 대신 확인해 드릴게요!</p>
         <a className="font-normal white" href={"https://open.kakao.com/o/sAxZZBCh"} target="_blank">https://open.kakao.com/o/sAxZZBCh</a>
-        <br />
+        <br /> */}
         {/* 업데이트 이전까지 유지 */}
         <h1 className="font-normal white">메이플 코어 강화 도우미</h1>
         <hr className={`${styles.bannerLine}`} />
@@ -483,7 +483,7 @@ const Index = () => {
                 </button>
               </div>
               <label htmlFor="screenshot-upload" className={`flex justify-center pointer transition-150 ${styles.upload}`}>
-                <input type="file" className="none" id="screenshot-upload" accept=".png" onChange={(event) => onSelectImages(event.target)} multiple />
+                <input type="file" className="none" id="screenshot-upload" accept=".png, .jpg, .jpeg" onChange={(event) => onSelectImages(event.target)} multiple />
                 <p>이미지 선택 (최대 100MB)</p>
               </label>
               {
@@ -492,7 +492,7 @@ const Index = () => {
                     {
                       imageUrls.map((imgUrl, idx) => (
                         <div className={`flex justify-center align-center max-width relative pointer ${styles.uploadedImage}`} onClick={() => onRemoveImage(idx)} key={imgUrl}>
-                          <Image className="transition-250" src={imgUrl} alt="" fill />
+                          <Image className="transition-250" src={imgUrl} alt="" fill priority />
                         </div>
                       ))
                     }
