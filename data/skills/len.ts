@@ -12,7 +12,6 @@ export const len: SkillData[] = [
   {
     name: "매화검 본초: 자",
     skill: "wk",
-    isOptional: true,
     image: {
       src: require("@/public/skills/len/wk.png"),
       alt: "wk",
