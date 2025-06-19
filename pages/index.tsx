@@ -442,6 +442,7 @@ const Index = () => {
       <div className="mt-80 flex flex-column align-center">
         {/* 업데이트 이전까지 유지 */}
         <p className="font-normal white">현재 유저가 너무 많아 요청이 느려지고 있습니다.</p>
+        <p className="font-normal white">서버 오류가 계속될 경우</p>
         <p className="font-normal white">하단 카톡방에서 이미지를 올려주시면, 대신 확인해 드릴게요!</p>
         <a className="font-normal white" href={"https://open.kakao.com/o/gHKJIvxh"} target="_blank">https://open.kakao.com/o/gHKJIvxh</a>
         <br />
