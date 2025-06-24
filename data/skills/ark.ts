@@ -56,11 +56,11 @@ export const ark: SkillData[] = [
     isEssential: true
   },
   {
-    name: "기어 다니는 공포",
-    skill: "fear-crawl",
+    name: "끝없는 고통",
+    skill: "endless-pain",
     image: {
-      src: require("@/public/skills/ark/fear-crawl.png"),
-      alt: "fear-crawl"
+      src: require("@/public/skills/ark/endless-pain.png"),
+      alt: "endless-pain"
     },
     isEssential: true
   },
