@@ -1,6 +1,6 @@
 import { WorkerRequest, WorkerResponse } from "@/types/worker.types";
 
-export const runFindValidCoreCombinationWorker = (cores: WorkerRequest["cores"], selectedSkills: WorkerRequest["selectedSkills"], candidates: WorkerRequest["candidates"]): Promise<WorkerResponse["result"]> => {
+export const runFindValidCoreCombinationWorker = (cores: WorkerRequest["cores"], selectedSkills: WorkerRequest["selectedSkills"], candidates: WorkerRequest["candidates"], requiredOverlap: WorkerRequest["requiredOverlap"]): Promise<WorkerResponse["result"]> => {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("@/workers/findValidCoreCombination.ts", import.meta.url), { type: "module" });
 
@@ -14,6 +14,6 @@ export const runFindValidCoreCombinationWorker = (cores: WorkerRequest["cores"],
       worker.terminate();
     }
 
-    worker.postMessage({ cores, selectedSkills, candidates });
+    worker.postMessage({ cores, selectedSkills, candidates, requiredOverlap });
   });
 };

@@ -143,6 +143,33 @@
   background-color: rgb(225, 225, 225);
 }
 
+.overlapSwitch {
+  background-color: rgb(245, 245, 245);
+}
+.overlapSwitch > p {
+  opacity: 0.35;
+  z-index: 1;
+}
+.overlapSwitch input:not(:checked) ~ p:nth-child(3) {
+  opacity: 1;
+  color: white;
+}
+.overlapSwitch input:checked ~ p:nth-child(4) {
+  opacity: 1;
+  color: white;
+}
+.overlapSwitch input:checked ~ .slider {
+  transform: translateX(0%);
+  background-color: rgb(185, 165, 255);
+}
+.slider {
+  left: 50%;
+  transform: translateX(-100%);
+  width: 50%;
+  height: 100%;
+  background-color: rgb(255, 175, 110);
+}
+
 .submit {
   border: 1px solid rgb(235, 235, 235);
   background-color: rgb(175, 175, 175);

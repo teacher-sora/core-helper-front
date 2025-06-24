@@ -34,6 +34,12 @@ button {
   flex: 1;
 }
 
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
 .overflow-hidden {
   overflow: hidden;
 }
@@ -100,6 +106,11 @@ button {
 .mt-80 {
   margin-top: 80px;
 }
+
+.ml-auto {
+  margin-left: auto;
+}
+
 .mb-150 {
   margin-bottom: 150px;
 }
@@ -130,6 +141,9 @@ button {
 
 .transition-150 {
   transition: all 150ms;
+}
+.transition-200 {
+  transition: all 200ms;
 }
 .transition-250 {
   transition: all 250ms;

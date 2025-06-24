@@ -10,10 +10,10 @@
 // 해당 조합이 유효한지 검사
 // 유효 조합이면 즉시 반환
 
-// is_satisfied 개선: skillCount를 외부에서 전달받아 사용
-bool is_satisfied(int* skillCount, int selectedCount) {
+// is_satisfied 개선: skillCount를 외부에서 전달받아 사용 및 requiredOverlap 추가
+bool is_satisfied(int* skillCount, int selectedCount, int requiredOverlap) {
   for (int i = 0; i < selectedCount; i++) {
-    if (skillCount[i] < 2) {
+    if (skillCount[i] < requiredOverlap) {
       return false;
     }
   }
@@ -34,11 +34,12 @@ bool dfs(
   int* selectedSkills, int selectedCount,
   int* candidates, int* candidatePrefixSum, int candidateCount,
   int idx, int* path, int* output,
-  int* skillCount
+  int* skillCount,
+  int requiredOverlap
 ) {
   if (idx == candidateCount) {
     // 모든 후보를 선택했으니 조건 검사
-    if (is_satisfied(skillCount, selectedCount)) {
+    if (is_satisfied(skillCount, selectedCount, requiredOverlap)) {
       memcpy(output, path, sizeof(int) * candidateCount);
       return true;
     }
@@ -66,17 +67,17 @@ bool dfs(
     // 가지치기: 아직 만족 불가능하면 더 깊이 탐색하지 않음
     bool canContinue = true;
     for (int s = 0; s < selectedCount; s++) {
-      // 현재 선택한 코어 수는 idx+1, 조건은 2개 이상 중첩
+      // 현재 선택한 코어 수는 idx+1, 조건은 requiredOverlap 개 이상 중첩
       // 남은 후보로 채울 수 없는 스킬이 있다면 중단
       int remainingCandidates = candidateCount - (idx + 1);
-      int needed = 2 - skillCount[s];
+      int needed = requiredOverlap - skillCount[s];
       if (needed > remainingCandidates) {
         canContinue = false;
         break;
       }
     }
 
-    if (canContinue && dfs(cores, coreCount, coreWidth, selectedSkills, selectedCount, candidates, candidatePrefixSum, candidateCount, idx + 1, path, output, skillCount)) {
+    if (canContinue && dfs(cores, coreCount, coreWidth, selectedSkills, selectedCount, candidates, candidatePrefixSum, candidateCount, idx + 1, path, output, skillCount, requiredOverlap)) {
       return true;
     }
 
@@ -97,7 +98,8 @@ int find_valid_combination(
   int* cores, int coreCount, int coreWidth,
   int* selectedSkills, int selectedCount,
   int* candidates, int* candidateSizes, int candidateCount,
-  int* output
+  int* output,
+  int requiredOverlap
 ) {
   int* path = malloc(sizeof(int) * candidateCount);
   if (!path) return 0;
@@ -118,7 +120,7 @@ int find_valid_combination(
 
   bool found = dfs(cores, coreCount, coreWidth, selectedSkills, selectedCount,
   candidates, candidatePrefixSum, candidateCount,
-  0, path, output, skillCount);
+  0, path, output, skillCount, requiredOverlap);
 
   free(path);
   free(skillCount);

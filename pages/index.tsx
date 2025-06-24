@@ -39,6 +39,7 @@ const Index = () => {
   const [resultMessage, setResultMessage] = useState<string>("");
 
   const [coreCombination, setCoreCombination] = useState<SkillData[][]>([]);
+  const [requiredOverlap, setRequiredOverlap] = useState<2 | 3>(2);
   
   const [cachedCores, setCachedCores] = useState<string[][]>([]);
   const [isCacheValid, setIsCacheValid] = useState<boolean>(false);
@@ -57,6 +58,11 @@ const Index = () => {
   const onSelectSkill = (skill: string) => {
     setSelectedSkills((prev) => prev.includes(skill) ? prev.filter((sk) => sk !== skill) : [...prev, skill]);
   };
+
+  const onToggleOverlap = (bool: boolean) => {
+    if (bool) setRequiredOverlap(3);
+    else setRequiredOverlap(2);
+  }
 
   const onSelectImages = useCallback((target: HTMLInputElement) => {
     const files = target.files || [];
@@ -192,8 +198,17 @@ const Index = () => {
     } = {};
 
     if (isCacheValid) {
+      const loadingDelayTimer = setTimeout(() => {
+        setIsLoading(true);
+        setResultMessage("");
+        setCoreCombination([]);
+      }, 100);
+
       if (cachedCores.length > 0) {
         const combinations = await findBestCombination(cachedCores);
+
+        clearAllTimeout([loadingDelayTimer])
+        setIsLoading(false);
   
         if (combinations.length > 0) {
           setResultMessage("");
@@ -225,12 +240,12 @@ const Index = () => {
       try {
         const devServer = "http://127.0.0.1:8000/core-helper/";
         const liveServer = "https://core-helper-back.fly.dev/core-helper/";
-  
+
         const res = await fetch(liveServer, {
           method: "POST",
           body: formData,
         });
-  
+
         if (!res.ok) {
           data = {
             success: false,
@@ -276,7 +291,7 @@ const Index = () => {
     setTimeout(() => {
       setLoadingMessage("");
     }, 250);
-  }, [selectedJobClass, selectedSkills, selectedImages, mediaStream, isCacheValid]);
+  }, [selectedJobClass, selectedSkills, selectedImages, mediaStream, isCacheValid, requiredOverlap]);
 
   const clearAllTimeout = (timers: NodeJS.Timeout[]) => {
     timers.forEach((timer) => {
@@ -294,8 +309,13 @@ const Index = () => {
 
     const allMainSkills = Object.keys(coreIndicesByMainSkill);
 
-    const minCount = selectedSkills.length > 3 ? Math.ceil((selectedSkills.length * 2) / 3) : 2;
-    const maxCount = Math.min(selectedSkills.length * 2, allMainSkills.length);
+    const minCount = selectedSkills.length > 3
+      ? Math.ceil((selectedSkills.length * requiredOverlap) / 3)
+      : requiredOverlap;
+    const maxCount = Math.min(
+      selectedSkills.length * requiredOverlap,
+      allMainSkills.length
+    );
     
     let validCoreCombination: number[] = [];
     let minLength = Infinity;
@@ -327,7 +347,7 @@ const Index = () => {
       candidates.sort((a, b) => b.level - a.level);
       const coreCandidates = candidates.map((candidate) => candidate["combination"]);
 
-      validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, coreCandidates);
+      validCoreCombination = await runFindValidCoreCombinationWorker(filteredCores, selectedSkills, coreCandidates, requiredOverlap);
       if (validCoreCombination.length > 0) minLength = count;
     }
 
@@ -512,20 +532,28 @@ const Index = () => {
                 ))
               }
             </div>
-            <div className={`grid justify-center background-white pd-10 gap-10 br-5 ${styles.skills}`}>
-              {
-                jobClassSkills[selectedJobClass].map((skill) => (
-                  <label htmlFor={skill.skill} className="pointer flex pd-5 br-5 gap-5 transition-150" key={skill.skill}>
-                    <input type="checkbox" className="none" id={skill.skill} name="skill" onChange={() => onSelectSkill(skill.skill)} checked={selectedSkills.includes(skill.skill)} />
-                    <Image className="transition-150" src={skill.image.src} alt={skill.image.alt} />
-                    <div className="flex max-width space-between">
-                      <p className="transition-150">{ skill.name }</p>
-                      { skill.isEssential && <p className="green">필수</p> }
-                      { skill.isOptional && <p className="coral">선택</p> }
-                    </div>
-                  </label>
-                ))
-              }
+            <div className="flex flex-column background-white pd-10 br-5 gap-10">
+              <div className={`grid justify-center gap-10 ${styles.skills}`}>
+                {
+                  jobClassSkills[selectedJobClass].map((skill) => (
+                    <label htmlFor={skill.skill} className="pointer flex pd-5 br-5 gap-5 transition-150" key={skill.skill}>
+                      <input type="checkbox" className="none" id={skill.skill} name="skill" onChange={() => onSelectSkill(skill.skill)} checked={selectedSkills.includes(skill.skill)} />
+                      <Image className="transition-150" src={skill.image.src} alt={skill.image.alt} />
+                      <div className="flex max-width space-between">
+                        <p className="transition-150">{ skill.name }</p>
+                        { skill.isEssential && <p className="green">필수</p> }
+                        { skill.isOptional && <p className="coral">선택</p> }
+                      </div>
+                    </label>
+                  ))
+                }
+              </div>
+              <label className={`pointer ml-auto relative align-center flex pd-5 br-5 gap-10 ${styles.overlapSwitch}`} htmlFor="overlapSwitch">
+                <input className="none" type="checkbox" id="overlapSwitch" onChange={(event) => onToggleOverlap(event.target.checked)} />
+                <div className={`absolute br-5 transition-250 ${styles.slider}`} />
+                <p className="no-select font-14 transition-200">2중첩</p>
+                <p className="no-select font-14 transition-200">3중첩</p>
+              </label>
             </div>
             <button className={`flex justify-center white pointer pd-10 br-5 transition-150 ${styles.submit}`} onClick={() => onSubmit()} disabled={!(selectedSkills.length > 0 && selectedImages.length > 0) || isLoading}>
               {

@@ -19,7 +19,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   let response!: WorkerResponse;
 
   try {
-    const { cores, selectedSkills, candidates } = event.data;
+    const { cores, selectedSkills, candidates, requiredOverlap } = event.data;
   
     await loadWasm();
   
@@ -29,7 +29,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     let validCombination: number[] = [];
   
     for (const cand of candidates) {
-      const result = callWasmFindValidCombination(intCores, intSelectedSkills, cand);
+      const result = callWasmFindValidCombination(intCores, intSelectedSkills, cand, requiredOverlap);
       if (result.length > 0) {
         validCombination = result;
         break;
@@ -90,7 +90,8 @@ const allocAndWrite = (data: number[]): number => {
 const callWasmFindValidCombination = (
   cores: number[][],
   selectedSkills: number[],
-  candidates: number[][]
+  candidates: number[][],
+  requiredOverlap: WorkerRequest["requiredOverlap"]
 ): number[] => {
   const coresFlat = cores.flat();
   const coreWidth = cores[0].length;
@@ -110,7 +111,8 @@ const callWasmFindValidCombination = (
     coresPtr, coreCount, coreWidth,
     selectedPtr, selectedSkills.length,
     candidatePtr, candidateLengthsPtr, candidateCount,
-    outputPtr
+    outputPtr,
+    requiredOverlap
   );
 
   const result = new Int32Array(wasmMemory.buffer, outputPtr, resultLen);
