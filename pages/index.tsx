@@ -241,7 +241,7 @@ const Index = () => {
         const devServer = "http://127.0.0.1:8000/core-helper/";
         const liveServer = "https://core-helper-back.fly.dev/core-helper/";
 
-        const res = await fetch(liveServer, {
+        const res = await fetch(devServer, {
           method: "POST",
           body: formData,
         });
@@ -254,8 +254,8 @@ const Index = () => {
         }
         else {
           data = await res.json();
-          setIsCacheValid(true);
-          // console.log(data["core_skill_names"])
+          // setIsCacheValid(true);
+          console.log(data["core_skill_names"])
         }
       } catch (error) {
         data = {
@@ -536,13 +536,13 @@ const Index = () => {
               <div className={`grid justify-center gap-10 ${styles.skills}`}>
                 {
                   jobClassSkills[selectedJobClass].map((skill) => (
-                    <label htmlFor={skill.skill} className="pointer flex pd-5 br-5 gap-5 transition-150" key={skill.skill}>
+                    <label htmlFor={skill.skill} className="pointer flex align-center pd-5 br-5 gap-5 transition-150" key={skill.skill}>
                       <input type="checkbox" className="none" id={skill.skill} name="skill" onChange={() => onSelectSkill(skill.skill)} checked={selectedSkills.includes(skill.skill)} />
                       <Image className="transition-150" src={skill.image.src} alt={skill.image.alt} />
                       <div className="flex max-width space-between">
-                        <p className="transition-150">{ skill.name }</p>
-                        { skill.isEssential && <p className="green">필수</p> }
-                        { skill.isOptional && <p className="coral">선택</p> }
+                        <p className="transition-150 word-keep">{ skill.name }</p>
+                        { skill.isEssential && <p className="green text-nowrap">필수</p> }
+                        { skill.isOptional && <p className="coral text-nowrap">선택</p> }
                       </div>
                     </label>
                   ))
@@ -572,10 +572,10 @@ const Index = () => {
                       <div className="flex flex-column background-white pd-10 br-5 gap-10" key={idx}>
                         {
                           core.map((skill, idx) => (
-                            <div className={`flex pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`} key={skill.skill}>
+                            <div className={`flex align-center pd-5 br-5 gap-5 ${idx === 0 ? "background-aliceblue" : ""}`} key={skill.skill}>
                               <Image src={skill.image.src} alt={skill.image.alt} />
                               <div className="flex max-width space-between">
-                                <p>{ skill["name"] }</p>
+                                <p className="word-keep">{ skill["name"] }</p>
                               </div>
                             </div>
                           ))

@@ -157,6 +157,14 @@ button {
   font-size: 14px;
 }
 
+.word-keep {
+  word-break: keep-all;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
 .text-center {
   text-align: center;
 }

@@ -229,3 +229,28 @@
     background-color: rgb(175, 175, 255);
   }
 }
+
+@media screen and (max-width: 600px) {
+  .table > div {
+    flex-direction: column;
+  }
+  .table > div {
+    padding: 0px 10px;
+  }
+
+  .jobs {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .jobs label {
+    padding: 0px 5px;
+  }
+  .jobImage {
+    display: none;
+  }
+
+  .jobClasses {
+    grid-template-columns: repeat(auto-fill, 30%);
+    grid-auto-rows: 75px;
+  }
+}

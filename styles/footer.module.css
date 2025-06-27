@@ -1,5 +1,5 @@
 .footer {
-  padding: 35px 0px;
+  padding: 35px 10px;
   background-color: rgb(55, 55, 55);
 }
 .footer p {
@@ -9,4 +9,11 @@
 .footer a {
   color: white;
   font-size: 14px;
+}
+
+@media screen and (max-width: 600px) {
+  .footer > div {
+    flex-direction: column;
+    align-items: center;
+  }
 }

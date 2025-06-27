@@ -4,7 +4,7 @@ const Footer = () => {
   const kakao = "https://open.kakao.com/o/gHKJIvxh";
 
   return (
-    <div className={`flex flex-column align-center max-width gap-5 ${styles.footer}`}>
+    <div className={`flex flex-column align-center gap-5 ${styles.footer}`}>
       <div className="flex gap-5">
         <p>버그, 오류 발견 시 문의 주세요</p>
         <a href={kakao} target="_blank">{ kakao }</a>
