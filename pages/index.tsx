@@ -241,7 +241,7 @@ const Index = () => {
         const devServer = "http://127.0.0.1:8000/core-helper/";
         const liveServer = "https://core-helper-back.fly.dev/core-helper/";
 
-        const res = await fetch(devServer, {
+        const res = await fetch(liveServer, {
           method: "POST",
           body: formData,
         });
@@ -254,8 +254,8 @@ const Index = () => {
         }
         else {
           data = await res.json();
-          // setIsCacheValid(true);
-          console.log(data["core_skill_names"])
+          setIsCacheValid(true);
+          // console.log(data["core_skill_names"])
         }
       } catch (error) {
         data = {
