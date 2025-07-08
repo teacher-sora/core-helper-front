@@ -470,8 +470,13 @@ const Index = () => {
         <h1 className="font-normal white">메이플 코어 강화 도우미</h1>
         <hr className={`${styles.bannerLine}`} />
       </div>
-      <div className={`mt-40 mb-150 max-width flex ${styles.table}`}>
-        <div className="flex max-width gap-20">
+      <div className={`mt-40 mb-150 max-width flex flex-column gap-20 ${styles.table}`}>
+        <div className="flex">
+          <div className={`pointer pd-5 br-5 transition-150 ${styles.guide}`} onClick={() => window.open("https://www.inven.co.kr/board/maple/2304/44543")}>
+            <p className="white font-14">임시 가이드</p>
+          </div>
+        </div>
+        <div className="flex gap-20">
           <div className={`flex flex-column gap-15 ${styles.left}`}>
             <div className={`flex flex-column background-white pd-10 gap-15 br-5 ${styles.jobs}`}>
               {

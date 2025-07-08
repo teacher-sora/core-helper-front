@@ -40,6 +40,11 @@
   flex: 1;
 }
 
+.guide {
+  border: 1px solid white;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
 .captureControls button {
   border: 1px solid rgb(235, 235, 235);
 }
@@ -184,6 +189,10 @@
 }
 
 @media (hover: hover) {
+  .guide:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
   .captureControls button:nth-child(1)[data-status="idle"]:hover {
     background-color: rgb(180, 230, 180);
   }
