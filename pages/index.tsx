@@ -207,7 +207,6 @@ const Index = () => {
       if (cachedCores.length > 0) {
         const combinations = await findBestCombination(cachedCores);
 
-        clearAllTimeout([loadingDelayTimer])
         setIsLoading(false);
   
         if (combinations.length > 0) {
@@ -221,6 +220,8 @@ const Index = () => {
       else {
         data = { message: "사용 가능한 코어가 없어요.\n잘못 입력한 게 있는지 확인해 주세요!" };
       }
+
+      clearAllTimeout([loadingDelayTimer]);
     }
     else {
       setIsLoading(true);
