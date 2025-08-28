@@ -95,15 +95,6 @@ export const eunwol: SkillData[] = [
     isEssential: true
   },
   {
-    name: "분혼 격참",
-    skill: "bunhon-gyeokcham",
-    image: {
-      src: require("@/public/skills/eunwol/bunhon-gyeokcham.png"),
-      alt: "bunhon-gyeokcham"
-    },
-    isOptional: true
-  },
-  {
     name: "정령의 화신",
     skill: "jeongryeongui-hwashin",
     image: {
