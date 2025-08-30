@@ -24,6 +24,12 @@ const recordIcon: ImageData = {
 }
 
 const Index = () => {
+  interface dataAttribute {
+    success?: boolean,
+    message?:string
+    core_skill_names?: string[][],
+  }
+
   const [selectedJob, setSelectedJob] = useState<JobCategory>("warrior");
   const [selectedJobClass, setSelectedJobClass] = useState<JobClassCategory>("hero");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -43,6 +49,8 @@ const Index = () => {
   
   const [cachedCores, setCachedCores] = useState<string[][]>([]);
   const [isCacheValid, setIsCacheValid] = useState<boolean>(false);
+
+  const [data, setData] = useState<dataAttribute>({});
 
   const onSelectJob = (job: JobCategory) => {
     setSelectedJob(job);
@@ -191,12 +199,6 @@ const Index = () => {
       setLoadingMessage("아직 분석 중이니까 나가지 말아 주세요");
     }, 60000);
 
-    let data: {
-      success?: boolean,
-      core_skill_names?: string[][],
-      message?: string
-    } = {};
-
     if (isCacheValid) {
       const loadingDelayTimer = setTimeout(() => {
         setIsLoading(true);
@@ -214,18 +216,17 @@ const Index = () => {
           setCoreCombination(combinations);
         }
         else {
-          data = { message: "현재 보유한 코어로는 조합이 어려워요.\n조금 더 코어를 모아주세요." };
+          setResultMessage("현재 보유한 코어로는 조합이 어려워요.\n코어를 조금 더 모은 뒤 사용해 주세요.");
         }
       }
       else {
-        data = { message: "사용 가능한 코어가 없어요.\n잘못 입력한 게 있는지 확인해 주세요!" };
+        setResultMessage(data.message ? data.message : "");
       }
 
       clearAllTimeout([loadingDelayTimer]);
     }
     else {
       setIsLoading(true);
-      setResultMessage("");
       setCoreCombination([]);
 
       const formData = new FormData();
@@ -248,47 +249,57 @@ const Index = () => {
         });
 
         if (!res.ok) {
-          data = {
-            success: false,
-            message: "분석 중 오류가 발생했어요.\n잠시 후 다시 시도해 주세요."
-          };
+          await res.json().then((json: dataAttribute) => {
+            setData({
+              success: json.success,
+              message: json.message
+            });
+          }).catch(() => {
+            setData({
+              success: false,
+              message: "서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요."
+            });
+          });
         }
         else {
-          data = await res.json();
-          setIsCacheValid(true);
-          // console.log(data["core_skill_names"])
+          await res.json().then(async (json: dataAttribute) => {
+            setIsCacheValid(true);
+
+            if (!json.success) {
+              setData({
+                success: json.success,
+                message: json.message
+              });
+            }
+            else {
+              const cores = json["core_skill_names"]!;
+              setCachedCores(cores);
+  
+              const combinations = await findBestCombination(cores);
+              if (combinations.length > 0) {
+                setCoreCombination(combinations);
+              }
+              else {
+                setData({
+                  success: json.success,
+                  message: "현재 보유한 코어로는 조합이 어려워요.\n코어를 조금 더 모은 뒤 사용해 주세요."
+                });
+              }
+            }
+          });
         }
       } catch (error) {
-        data = {
+        console.error(error);
+
+        setData({
           success: false,
-          message: "서버와 연결할 수 없어요.\n잠시 후 다시 시도해 주세요."
-        };
-
-        console.error(error)
-      }
-
-      if (data["success"]) {
-        const cores = data["core_skill_names"]!;
-        const combinations = await findBestCombination(cores);
-
-        setCachedCores(cores);
-
-        if (combinations.length > 0) {
-          setCoreCombination(combinations);
-        }
-        else {
-          data = { message: "현재 보유한 코어로는 조합이 어려워요.\n조금 더 코어를 모아주세요." };
-        }
-      }
-      else {
-        data = { message: data["message"] };
+          message: "서버와 연결할 수 없어요.\n같은 현상이 반복되면 관리자에게 문의해 주세요."
+        });
       }
     }
     
     setIsLoading(false);
     clearAllTimeout([timer1, timer2, timer3, timer4]);
-
-    if (data["message"]) setResultMessage(data["message"]);
     setTimeout(() => {
       setLoadingMessage("");
     }, 250);
@@ -447,9 +458,14 @@ const Index = () => {
   };
   
   useEffect(() => {
+    setData({});
     setCachedCores([]);
     setIsCacheValid(false);
   }, [selectedJobClass, selectedImages]);
+
+  useEffect(() => {
+    setResultMessage(data.message ? data.message : "");
+  }, [data.message]);
 
   return (
     <div className="relative flex flex-column justify-center align-center flex-1 overflow-hidden">
@@ -461,13 +477,6 @@ const Index = () => {
         </div>
       </div>
       <div className="mt-80 flex flex-column align-center">
-        {/* 업데이트 이전까지 유지 */}
-        {/* <p className="font-normal white">현재 유저가 너무 많아 요청이 느려지고 있습니다.</p>
-        <p className="font-normal white">서버 오류가 계속될 경우</p>
-        <p className="font-normal white">하단 카톡방에서 이미지를 올려주시면, 대신 확인해 드릴게요!</p>
-        <a className="font-normal white" href={"https://open.kakao.com/o/sAxZZBCh"} target="_blank">https://open.kakao.com/o/sAxZZBCh</a>
-        <br /> */}
-        {/* 업데이트 이전까지 유지 */}
         <h1 className="font-normal white">메이플 코어 강화 도우미</h1>
         <hr className={`${styles.bannerLine}`} />
       </div>
@@ -568,8 +577,8 @@ const Index = () => {
             </button>
             {
               (!isLoading && resultMessage.length > 0) ? (
-                <div className="flex justify-center">
-                  <p className="text-center space-pre font-14 white">{ resultMessage }</p>
+                <div className="flex justify-center br-5">
+                  <p className={`text-center space-pre br-5 font-14 white ${styles.resultMessage}`}>{ resultMessage }</p>
                 </div>
               ) : (!isLoading && coreCombination.length > 0) ? (
                 <div className={`grid gap-15 ${styles.result}`}>
